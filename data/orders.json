@@ -1,0 +1,5 @@
+{
+  "A-1001": {"customer": "Anna Weber", "item": "Kaffeemaschine Barista Pro", "total_eur": 129.90, "status": "delivered", "delivered_days_ago": 3, "delay_days": 0},
+  "A-1002": {"customer": "Markus Klein", "item": "Laufschuhe Trail X", "total_eur": 89.00, "status": "delivered", "delivered_days_ago": 1, "delay_days": 6},
+  "A-1003": {"customer": "Sophie Braun", "item": "Bluetooth-Kopfhörer Soundmax", "total_eur": 59.99, "status": "delivered", "delivered_days_ago": 20, "delay_days": 0}
+}
