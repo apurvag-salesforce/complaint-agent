@@ -1,4 +1,4 @@
-"""Complaint-handling AI agent.
+﻿"""Complaint-handling AI agent.
 
 Pipeline for each incoming customer email:
   1. Extract structured data (forced tool call -> guaranteed JSON schema)
@@ -70,9 +70,9 @@ def extract(client: anthropic.Anthropic, email_text: str) -> dict:
     response = client.messages.create(
         model=MODEL,
         max_tokens=512,
-        system="Extract structured data from the customer email. Use null for anything not stated. Do not guess.",
+        system="Extract structured data from the customer email. Use null for anything not stated. Do not guess. Always answer by calling the record_complaint tool.",
         tools=[EXTRACT_TOOL],
-        tool_choice={"type": "tool", "name": "record_complaint"},
+        tool_choice={"type": "auto"},
         messages=[{"role": "user", "content": email_text}],
     )
     for block in response.content:
@@ -175,3 +175,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
