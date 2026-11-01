@@ -65,3 +65,79 @@ Set `AGENT_MODEL` to use a different Claude model.
 
 - Orders, refunds and tickets are **mocked** with local files. Replace the functions in `tools.py` with real REST API calls.
 - Next steps: receive emails via a **webhook** (FastAPI), add more channels (WhatsApp), retrieve policy text with **RAG**, and add a small web UI for approvals.
+
+## Example run
+
+Input: `data/emails/01_beschaedigt.txt` (customer reports a broken water tank on a coffee machine, order A-1001).
+
+```
+  >> Approval required: issue_refund({"order_id": "A-1001", "amount_eur": 129.9, "reason": "Beschädigter Artikel (gebrochener Wassertank), innerhalb von 14 Tagen nach Lieferung gemeldet."})
+  >> Approve? [y/N] y
+
+Agent result:
+**Ausgeführte Aktionen:**
+- Ich habe die Bestellung A-1001 geprüft. Die Lieferung war vor 3 Tagen, die Meldung liegt also innerhalb der 14-Tage-Frist.
+- Ich habe eine Rückerstattung von 129,90 € veranlasst (Referenz R-2A0D74). Der Status ist „refunded“. Ein Ticket war nicht nötig.
+
+**Antwortentwurf an die Kundin:**
+
+Betreff: Ihre Bestellung A-1001 – Rückerstattung
+
+Hallo Frau Weber,
+
+vielen Dank für Ihre Nachricht, und entschuldigen Sie bitte die Unannehmlichkeiten mit Ihrer Kaffeemaschine Barista Pro. Da der Wassertank bei der Lieferung beschädigt war, haben wir Ihnen den Kaufpreis von 129,90 € erstattet. Die Referenz lautet R-2A0D74. Der Betrag wird in Kürze auf Ihrem ursprünglichen Zahlungsweg gutgeschrieben.
+
+Bei Fragen melden Sie sich gerne jederzeit bei uns.
+
+Freundliche Grüße
+Ihr Kundenservice
+```
+
+The audit trail (`runtime/audit.jsonl`) records every tool call. Excerpt from this run:
+
+```
+{"tool": "get_order", "args": {"order_id": "A-1001"}, "risk": "read", "approved": null,
+ "result": {"customer": "Anna Weber", "item": "Kaffeemaschine Barista Pro", "total_eur": 129.9, "status": "delivered", "delivered_days_ago": 3}}
+{"tool": "issue_refund", "args": {"order_id": "A-1001", "amount_eur": 129.9}, "risk": "approval_required", "approved": true,
+ "result": {"refund_id": "R-2A0D74", "status": "refunded", "amount_eur": 129.9}}
+```
+
+When the reviewer answers `n` instead (run with `--approval deny`), the refund is blocked (`"approved": false`) and the agent creates a ticket for a human instead. Orders that are unknown or reported after the 14-day window are escalated to a human.
+
+## Example run
+
+Input: `data/emails/01_beschaedigt.txt` (customer reports a broken water tank on a coffee machine, order A-1001).
+
+```
+  >> Approval required: issue_refund({"order_id": "A-1001", "amount_eur": 129.9, "reason": "Beschädigter Artikel (gebrochener Wassertank), innerhalb von 14 Tagen nach Lieferung gemeldet."})
+  >> Approve? [y/N] y
+
+Agent result:
+**Ausgeführte Aktionen:**
+- Ich habe die Bestellung A-1001 geprüft. Die Lieferung war vor 3 Tagen, die Meldung liegt also innerhalb der 14-Tage-Frist.
+- Ich habe eine Rückerstattung von 129,90 € veranlasst (Referenz R-2A0D74). Der Status ist „refunded“. Ein Ticket war nicht nötig.
+
+**Antwortentwurf an die Kundin:**
+
+Betreff: Ihre Bestellung A-1001 – Rückerstattung
+
+Hallo Frau Weber,
+
+vielen Dank für Ihre Nachricht, und entschuldigen Sie bitte die Unannehmlichkeiten mit Ihrer Kaffeemaschine Barista Pro. Da der Wassertank bei der Lieferung beschädigt war, haben wir Ihnen den Kaufpreis von 129,90 € erstattet. Die Referenz lautet R-2A0D74. Der Betrag wird in Kürze auf Ihrem ursprünglichen Zahlungsweg gutgeschrieben.
+
+Bei Fragen melden Sie sich gerne jederzeit bei uns.
+
+Freundliche Grüße
+Ihr Kundenservice
+```
+
+The audit trail (`runtime/audit.jsonl`) records every tool call. Excerpt from this run:
+
+```
+{"tool": "get_order", "args": {"order_id": "A-1001"}, "risk": "read", "approved": null,
+ "result": {"customer": "Anna Weber", "item": "Kaffeemaschine Barista Pro", "total_eur": 129.9, "status": "delivered", "delivered_days_ago": 3}}
+{"tool": "issue_refund", "args": {"order_id": "A-1001", "amount_eur": 129.9}, "risk": "approval_required", "approved": true,
+ "result": {"refund_id": "R-2A0D74", "status": "refunded", "amount_eur": 129.9}}
+```
+
+When the reviewer answers `n` instead (run with `--approval deny`), the refund is blocked (`"approved": false`) and the agent creates a ticket for a human instead. Orders that are unknown or reported after the 14-day window are escalated to a human.
